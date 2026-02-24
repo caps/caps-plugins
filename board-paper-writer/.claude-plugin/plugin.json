@@ -1,0 +1,8 @@
+{
+  "name": "board-paper-writer",
+  "version": "1.0.0",
+  "description": "Draft, iterate, and polish board papers collaboratively. Covers decision papers, discussion papers, noting papers, and assurance papers — structured around AICD and governance best practices with active voice, inverted pyramid, and the QDI methodology.",
+  "author": {
+    "name": "Pete Capra"
+  }
+}
