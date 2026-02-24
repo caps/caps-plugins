@@ -1,4 +1,4 @@
-# claude-plugins-by-caps
+# caps-plugins
 
 A personal plugin marketplace for [Claude Cowork](https://claude.com/blog/cowork-plugins) and [Claude Code](https://code.claude.com/docs/en/plugins).
 
@@ -8,7 +8,7 @@ Add this marketplace, then install any plugin from it:
 
 ```bash
 # Add the marketplace
-claude plugin marketplace add caps/claude-plugins-by-caps
+claude plugin marketplace add caps/caps-plugins
 
 # Install a plugin
 claude plugins add board-paper-writer@caps-plugins
