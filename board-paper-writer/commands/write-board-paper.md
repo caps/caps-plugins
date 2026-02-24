@@ -5,8 +5,6 @@ argument-hint: "<topic or brief description>"
 
 # Write Board Paper
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../CONNECTORS.md).
-
 Draft a board paper through a collaborative, iterative process. The output is a governance-grade paper structured around AICD best practices, written in active voice with clear recommendations and honest risk assessment.
 
 ## Usage
@@ -100,9 +98,7 @@ Gather the substance of the paper. This should feel like a structured interview,
 - Where are the genuine uncertainties or disagreements?
 
 **Pull context from connected tools:**
-If **~~knowledge base** (Confluence/Notion) is connected, search for prior board papers and strategy documents on this topic.
-If **~~cloud storage** (Google Drive) is connected, search for financial models, supporting analyses, or prior presentations.
-Do not ask the user to connect tools — work with what you have.
+If connected tools (e.g. Confluence, Google Drive) are available in the user's environment, search for prior board papers, strategy documents, financial models, or supporting analyses on this topic. Do not ask the user to connect tools — work with what you have.
 
 ---
 
@@ -178,12 +174,12 @@ Present options:
 - **Upload a template** — "Upload your organisation's .docx template and I'll flow the content into it"
 - **Standard format** — "I'll create a clean .docx with the standard board paper structure"
 - **Keep as markdown** — "Keep the markdown artifact as-is for now"
-- **Publish to Confluence** — "Create a Confluence page with this content" (if Atlassian is connected)
+- **Publish to Confluence** — "Create a Confluence page with this content" (if Atlassian tools are available in the environment)
 
 If the user uploads a branded template:
 - Map board paper sections to the template's structure
 - Preserve the template's formatting, headers, footers, and branding
-- Insert the content using the docx skill
+- Insert the content using Cowork's built-in docx generation capability
 - Flag any sections that don't map cleanly to the template
 
 If no template, generate a clean professional .docx using standard board paper formatting.

@@ -5,7 +5,11 @@ A governance writing plugin primarily designed for [Cowork](https://claude.com/p
 ## Installation
 
 ```
-claude plugins add board-paper-writer
+# Add the marketplace first
+claude plugin marketplace add caps/claude-plugins-by-caps
+
+# Add the plugin
+claude plugins add board-paper-writer@claude-plugins-by-caps
 ```
 
 ## What It Does
@@ -96,18 +100,6 @@ This plugin is grounded in:
 4. **Executive summary stands alone.** 4-5 lines. A director who reads nothing else gets the message.
 5. **Honest risk assessment.** Include the risk of inaction. No whitewashing.
 6. **The "so what?" test.** Every section answers why the board should care.
-
-## Data Sources
-
-> See [CONNECTORS.md](CONNECTORS.md) for the full list of supported integrations.
-
-Connect your knowledge base and document storage for the best experience:
-
-- **Knowledge base** (Atlassian/Confluence) — Search for prior board papers, publish final versions
-- **Cloud storage** (Google Drive) — Find supporting documents and financial models
-- **Chat** (Slack) — Pull context from team discussions
-
-Without connectors, provide context manually. The plugin adapts gracefully.
 
 ## Customisation
 

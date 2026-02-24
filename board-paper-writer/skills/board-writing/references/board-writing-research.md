@@ -282,7 +282,7 @@ Paper Type:          [For Decision | For Discussion | For Noting | For Assurance
 Sponsor:             [Name, Title]
 Presenter:           [Name, Title]
 Date Prepared:       [DD Month YYYY]
-Security:            [Board Confidential / Restricted / Open]
+Classification:      [Board Confidential / Restricted / Open]
 
 DRAFT RESOLUTION (if applicable):
 [Precise wording of the resolution]
