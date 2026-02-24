@@ -6,7 +6,7 @@ A governance writing plugin primarily designed for [Cowork](https://claude.com/p
 
 ```
 # Add the marketplace first
-claude plugin marketplace add caps/claude-plugins-by-caps
+claude plugin marketplace add caps/caps-plugins
 
 # Add the plugin
 claude plugins add board-paper-writer@caps-plugins
