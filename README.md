@@ -11,7 +11,7 @@ Add this marketplace, then install any plugin from it:
 claude plugin marketplace add caps/claude-plugins-by-caps
 
 # Install a plugin
-claude plugins add board-paper-writer@claude-plugins-by-caps
+claude plugins add board-paper-writer@caps-plugins
 ```
 
 ## Available Plugins

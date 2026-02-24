@@ -9,7 +9,7 @@ A governance writing plugin primarily designed for [Cowork](https://claude.com/p
 claude plugin marketplace add caps/claude-plugins-by-caps
 
 # Add the plugin
-claude plugins add board-paper-writer@claude-plugins-by-caps
+claude plugins add board-paper-writer@caps-plugins
 ```
 
 ## What It Does

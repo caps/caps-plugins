@@ -1,0 +1,20 @@
+{
+  "name": "caps-plugins",
+  "owner": {
+    "name": "Pete Capra"
+  },
+  "metadata": {
+    "description": "Personal plugin marketplace by Pete Capra"
+  },
+  "plugins": [
+    {
+      "name": "board-paper-writer",
+      "source": "./board-paper-writer",
+      "description": "Draft governance-grade board papers through collaborative Q&A and iterative refinement. Covers decision, discussion, noting, and assurance papers — structured around AICD, GGI, and Board Intelligence QDI best practices.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Pete Capra"
+      }
+    }
+  ]
+}
