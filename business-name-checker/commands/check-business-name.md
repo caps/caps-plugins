@@ -54,10 +54,6 @@ Recommend ASIC + .com + .com.au as a minimum for any Australian business.
 
 If the user selects "other TLDs", ask which ones. Suggest: `.au`, `.net`, `.io`, `.co`, `.org`. Let them type additional ones.
 
-**Important:** Remind the user about the Cowork network allowlist if this is likely their first time using the plugin:
-
-> "Quick heads-up: this plugin needs internet access to check availability. If any checks fail with a network error, you may need to add some domains to your Cowork allowlist (Settings > Capabilities > Additional allowed domains). I'll tell you exactly which ones if it comes up."
-
 ---
 
 ### Phase 3: Generate Names

@@ -56,9 +56,7 @@ Before running any check scripts, ensure dependencies are installed:
 pip install requests beautifulsoup4 python-whois 2>/dev/null || pip3 install requests beautifulsoup4 python-whois 2>/dev/null
 ```
 
-If any check fails with a network/connection error, tell the user:
-
-> "It looks like network access to [domain] is blocked. In Cowork, go to **Settings > Capabilities > Additional allowed domains** and add `[domain]`. Then try again."
+If any check fails with a network/connection error, tell the user clearly which service failed and suggest they check their internet connection or try again later.
 
 ### Check 1: ASIC Business Names Register
 
@@ -66,7 +64,7 @@ If any check fails with a network/connection error, tell the user:
 
 **Why this approach:** The ASIC ConnectOnline web interface uses JSF (JavaServer Faces) with ViewState tokens and potential CAPTCHAs, making it unreliable for programmatic access. The data.gov.au CSV is the official open dataset and is much more reliable.
 
-**Network allowlist required:** `data.gov.au`
+**Requires network access to:** `data.gov.au`
 
 **Python script pattern:**
 
@@ -92,7 +90,7 @@ def check_asic_names(names_to_check):
                 f.write(resp.content)
             print("Download complete.")
         except requests.exceptions.ConnectionError:
-            return {name: "Error: Network blocked. Add data.gov.au to Cowork allowlist." for name in names_to_check}
+            return {name: "Error: Network blocked. Cannot reach data.gov.au. Check internet connection." for name in names_to_check}
         except Exception as e:
             return {name: f"Error: {e}" for name in names_to_check}
 
@@ -146,7 +144,7 @@ for name, status in results.items():
 
 **Approach:** Use the `python-whois` library for a zero-config WHOIS lookup. No API key required.
 
-**Network allowlist required:** WHOIS servers vary by TLD but typically use port 43. If WHOIS is blocked, fall back to DNS resolution as a rough check.
+**Requires network access to:** WHOIS servers (port 43). Falls back to DNS resolution if WHOIS is unavailable.
 
 **Python script pattern:**
 
@@ -174,7 +172,7 @@ def check_domains(base_name, tlds):
         except socket.timeout:
             results[domain] = "Error: Timeout"
         except ConnectionRefusedError:
-            results[domain] = "Error: WHOIS blocked. Try adding whois servers to allowlist."
+            results[domain] = "Error: WHOIS connection refused."
         except Exception as e:
             # Fallback: try DNS resolution
             try:
@@ -197,7 +195,7 @@ for domain, status in results.items():
 
 **Approach:** HTTP GET to the public Etsy shop URL. A 404 response indicates the shop name is not taken. Etsy uses aggressive bot detection (DataDome), so this check is best-effort.
 
-**Network allowlist required:** `www.etsy.com`
+**Requires network access to:** `www.etsy.com`
 
 **Python script pattern:**
 
@@ -228,7 +226,7 @@ def check_etsy_names(names):
             else:
                 results[name] = f"Uncertain (HTTP {resp.status_code})"
         except requests.exceptions.ConnectionError:
-            results[name] = "Error: Network blocked. Add www.etsy.com to Cowork allowlist."
+            results[name] = "Error: Network blocked. Cannot reach www.etsy.com. Check internet connection."
         except Exception as e:
             results[name] = f"Error: {e}"
 
@@ -246,7 +244,7 @@ for name, status in results.items():
 
 **Approach:** HTTP GET to the public Instagram profile URL. Instagram aggressively blocks automated requests — the `requests` library's TLS fingerprint is often detected and blocked. This check is best-effort and may return "Uncertain" frequently.
 
-**Network allowlist required:** `www.instagram.com`
+**Requires network access to:** `www.instagram.com`
 
 **Python script pattern:**
 
@@ -286,7 +284,7 @@ def check_instagram_handles(names):
             else:
                 results[name] = f"Uncertain (HTTP {resp.status_code}, @{handle})"
         except requests.exceptions.ConnectionError:
-            results[name] = "Error: Network blocked. Add www.instagram.com to Cowork allowlist."
+            results[name] = "Error: Network blocked. Cannot reach www.instagram.com. Check internet connection."
             break
         except Exception as e:
             results[name] = f"Error: {e}"
