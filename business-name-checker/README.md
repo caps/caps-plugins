@@ -1,6 +1,6 @@
 # Business Name Checker Plugin
 
-A plugin for [Cowork](https://claude.com/product/cowork) (and Claude Code) that helps you find available Australian business names. Describe your business idea, and it generates creative name suggestions then checks if they're available across multiple platforms.
+A Claude Code plugin that helps you find available Australian business names. Describe your business idea, and it generates creative name suggestions then checks if they're available across multiple platforms.
 
 ## Installation
 
@@ -33,20 +33,14 @@ claude plugins add business-name-checker@caps-plugins
 |---|---|
 | `business-naming` | Australian naming conventions, ASIC rules, name generation strategies, availability check patterns |
 
-## Setup for Cowork
+## Prerequisites
 
-The plugin runs Python scripts to check external services. For these to work in Cowork, you need to allow network access to the relevant domains.
+The plugin executes Python scripts to check external services. You'll need:
 
-**Go to Settings > Capabilities > Additional allowed domains** and add whichever domains you need:
+- **Python 3** installed and available on your PATH
+- The plugin will auto-install required pip packages (`requests`, `beautifulsoup4`, `python-whois`) on first run
 
-| Check | Domain to Allow |
-|---|---|
-| ASIC Business Names | `data.gov.au` |
-| Domain availability | _(WHOIS uses port 43 — may work without allowlist changes)_ |
-| Etsy shop names | `www.etsy.com` |
-| Instagram handles | `www.instagram.com` |
-
-You only need to add the domains for the checks you plan to use. The plugin will tell you exactly which domain to add if a check fails.
+No API keys or special configuration required — all checks use free, public data sources.
 
 ## Example Workflow
 
