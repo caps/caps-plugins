@@ -97,12 +97,21 @@ If the user wants changes, regenerate and present again. Only proceed to Phase 4
 
 This is where Claude writes and executes Python scripts. Follow the patterns defined in the **business-naming** skill exactly.
 
-**Step 1: Install dependencies (first run only)**
+**Step 1: Install and verify dependencies (first run only)**
 
-Write and execute:
+Create a virtual environment and install packages:
 ```bash
-pip install requests beautifulsoup4 python-whois 2>/dev/null || pip3 install requests beautifulsoup4 python-whois 2>/dev/null
+python3 -m venv /tmp/namechecker-venv 2>/dev/null; /tmp/namechecker-venv/bin/pip install requests beautifulsoup4 python-whois 2>&1 | tail -1
 ```
+
+Then verify the installation works:
+```bash
+/tmp/namechecker-venv/bin/python3 -c "import requests, whois; print('OK')"
+```
+
+All Python scripts in subsequent steps must use `/tmp/namechecker-venv/bin/python3` instead of `python3`.
+
+**Do NOT launch parallel checks (ASIC, domains, Etsy) until dep installation has completed and been verified. The dep install must be its own sequential step before any parallel work.**
 
 **Step 2: Run each selected check**
 

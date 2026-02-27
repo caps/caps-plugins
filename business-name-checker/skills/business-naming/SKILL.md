@@ -50,15 +50,28 @@ When generating names:
 
 ### Important: First-Run Setup
 
-Before running any check scripts, ensure dependencies are installed:
+Before running any check scripts, create a virtual environment and install dependencies:
 
 ```bash
-pip install requests beautifulsoup4 python-whois 2>/dev/null || pip3 install requests beautifulsoup4 python-whois 2>/dev/null
+python3 -m venv /tmp/namechecker-venv 2>/dev/null; /tmp/namechecker-venv/bin/pip install requests beautifulsoup4 python-whois 2>&1 | tail -1
 ```
 
+<<<<<<< Updated upstream
 If any check fails with a network/connection error, tell the user:
 
 > "It looks like network access to [domain] is blocked. In Cowork, go to **Settings > Capabilities > Additional allowed domains** and add `[domain]`. Then try again."
+=======
+Then verify the installation:
+```bash
+/tmp/namechecker-venv/bin/python3 -c "import requests, whois; print('OK')"
+```
+
+All Python scripts below must be run with `/tmp/namechecker-venv/bin/python3` instead of `python3`.
+
+**Do NOT launch parallel checks until dep installation has completed and been verified. The dep install must be its own sequential step before any parallel work.**
+
+If any check fails with a network/connection error, tell the user clearly which service failed and suggest they check their internet connection or try again later.
+>>>>>>> Stashed changes
 
 ### Check 1: ASIC Business Names Register
 
@@ -72,6 +85,7 @@ If any check fails with a network/connection error, tell the user:
 
 ```python
 import csv
+import datetime
 import io
 import os
 import requests
@@ -81,12 +95,26 @@ def check_asic_names(names_to_check):
 
     # Download the dataset (or use cached version)
     cache_path = "/tmp/asic_business_names.csv"
-    dataset_url = "https://data.gov.au/data/dataset/bc515135-4bb6-4d50-957a-3713709a76d3/resource/55ad4b1c-5eeb-44ea-8b29-d410da431be3/download/business_names_202512.csv"
+    base_url = "https://data.gov.au/data/dataset/bc515135-4bb6-4d50-957a-3713709a76d3/resource/55ad4b1c-5eeb-44ea-8b29-d410da431be3/download/business_names_{}.csv"
+
+    # Dynamically compute month suffixes to try (current, previous, month before)
+    today = datetime.date.today()
+    months_to_try = []
+    for offset in range(3):
+        d = today.replace(day=1) - datetime.timedelta(days=offset * 28)
+        months_to_try.append(d.strftime('%Y%m'))
 
     if not os.path.exists(cache_path):
         print("Downloading ASIC Business Names Register (this may take a moment)...")
         try:
-            resp = requests.get(dataset_url, timeout=120)
+            resp = None
+            for month in months_to_try:
+                url = base_url.format(month)
+                resp = requests.get(url, timeout=120)
+                if resp.status_code == 200:
+                    print(f"Found dataset for {month}.")
+                    break
+                print(f"No dataset for {month}, trying earlier month...")
             resp.raise_for_status()
             with open(cache_path, 'wb') as f:
                 f.write(resp.content)
@@ -138,7 +166,7 @@ for name, status in results.items():
 ```
 
 **Important notes:**
-- The CSV URL changes monthly (the `202512` suffix is the date). The script should try the URL and if it 404s, fetch the dataset landing page to find the current download link.
+- The CSV URL changes monthly. The script dynamically computes the current month suffix and tries the current month, previous month, and the month before that, so it stays up to date automatically.
 - The CSV is large (~100MB+). Cache it at `/tmp/asic_business_names.csv` so it's only downloaded once per session.
 - Search is case-insensitive exact match first, then flag close matches.
 
@@ -201,9 +229,18 @@ for domain, status in results.items():
 
 **Python script pattern:**
 
+<<<<<<< Updated upstream
 ```python
 import requests
 import time
+=======
+1. Convert the business name to a shop handle: lowercase, remove spaces and punctuation, replace `&` with `and`, keep only alphanumeric characters
+2. Use the WebSearch tool to search: `Etsy shop "[shophandle]"`
+3. Analyse the results:
+   - If an exact Etsy shop URL appears (e.g., `etsy.com/shop/trovejewellery` or `etsy.com/au/shop/trovejewellery`) — **Taken**
+   - If no exact match but a very similar shop name appears (e.g., searching "gildedthread" finds "Gildedthreadsshop") — **Likely available (but similar shop "[name]" exists)**
+   - If no Etsy shop URL matches or is similar — **Likely available**
+>>>>>>> Stashed changes
 
 def check_etsy_names(names):
     """Check Etsy shop name availability via public URL."""
@@ -319,6 +356,11 @@ Always present results as a markdown table. Sort names by availability score (mo
 ### Status Labels
 - **Available** — confirmed not registered/taken
 - **Likely available** — best-effort check suggests not taken, but verify manually
+<<<<<<< Updated upstream
+=======
+- **Likely available (but similar shop "[name]" exists)** — Etsy handle not taken, but a similar shop name was found in search results
+- **Probably taken** — the name is a word-subset of an existing registered name (e.g., "Trove Jewellery" vs "Trove Jewellery Studio"). ASIC will likely reject this.
+>>>>>>> Stashed changes
 - **Taken** — confirmed registered or in use
 - **Found (Cancelled)** — was registered with ASIC but cancelled (may be reusable)
 - **Error: [reason]** — check failed, explain why and how to fix
