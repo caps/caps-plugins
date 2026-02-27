@@ -73,7 +73,7 @@ If any check fails with a network/connection error, tell the user clearly which 
 
 **Why this approach:** The ASIC ConnectOnline web interface uses JSF (JavaServer Faces) with ViewState tokens and potential CAPTCHAs, making it unreliable for programmatic access. The data.gov.au CSV is the official open dataset and is much more reliable.
 
-**Network allowlist required:** `data.gov.au`
+**Requires network access to:** `data.gov.au`
 
 **Python script pattern:**
 
@@ -82,7 +82,15 @@ import csv
 import datetime
 import io
 import os
+import re
 import requests
+
+STOP_WORDS = {'the', 'and', 'of', 'for', 'in', 'on', 'at', 'to', 'by', 'a', 'an', 'pty', 'ltd', 'limited', 'proprietary', 'australia', 'australian', 'nsw', 'vic', 'qld', 'sa', 'wa', 'tas', 'nt', 'act'}
+
+def extract_words(name):
+    """Extract meaningful words (3+ chars, excluding stop words) from a name."""
+    words = re.findall(r'[a-z]{3,}', name.lower())
+    return set(w for w in words if w not in STOP_WORDS)
 
 def check_asic_names(names_to_check):
     """Check business names against the ASIC Business Names Register (data.gov.au)."""
@@ -114,7 +122,7 @@ def check_asic_names(names_to_check):
                 f.write(resp.content)
             print("Download complete.")
         except requests.exceptions.ConnectionError:
-            return {name: "Error: Network blocked. Add data.gov.au to Cowork allowlist." for name in names_to_check}
+            return {name: "Error: Network blocked. Cannot reach data.gov.au. Check internet connection." for name in names_to_check}
         except Exception as e:
             return {name: f"Error: {e}" for name in names_to_check}
 
@@ -124,14 +132,23 @@ def check_asic_names(names_to_check):
     names_upper = {name: name.upper().strip() for name in names_to_check}
 
     try:
-        with open(cache_path, 'r', encoding='utf-8', errors='replace') as f:
-            reader = csv.DictReader(f)
-            registered = {}
+        # Note: CSV is tab-delimited with a UTF-8 BOM character
+        with open(cache_path, 'r', encoding='utf-8-sig', errors='replace') as f:
+            reader = csv.DictReader(f, delimiter='\t')
+            registered = {}  # name -> status
             for row in reader:
                 bn = row.get('BN_NAME', '').upper().strip()
                 status = row.get('BN_STATUS', '').strip()
                 if bn:
                     registered[bn] = status
+
+        # Pre-compute word sets for registered names (only Registered status, for similarity)
+        registered_words = {}
+        for bn, status in registered.items():
+            if status.upper() in ('REGISTERED', 'REGISTRATION'):
+                words = extract_words(bn)
+                if len(words) >= 2:
+                    registered_words[bn] = words
 
         for name, name_up in names_upper.items():
             if name_up in registered:
@@ -141,10 +158,31 @@ def check_asic_names(names_to_check):
                 else:
                     results[name] = f"Found ({status})"
             else:
-                # Also check for close matches (contains)
-                close = [k for k in registered if name_up in k or k in name_up]
-                if close:
-                    results[name] = f"Available (but {len(close)} similar names exist)"
+                # Word-based similarity matching
+                search_words = extract_words(name)
+                subset_of = None
+                similar_count = 0
+
+                if search_words:
+                    for bn, bn_words in registered_words.items():
+                        # "Probably taken": ALL search words appear in a registered name
+                        # e.g. searching "Trove Jewellery" matches "Trove Jewellery Studio"
+                        if search_words <= bn_words:
+                            subset_of = bn
+                            break
+                        # "Similar": registered name's words are all in the search name,
+                        # OR significant overlap (2+ shared words)
+                        if bn_words <= search_words:
+                            similar_count += 1
+                        elif len(search_words & bn_words) >= 2:
+                            similar_count += 1
+
+                if subset_of:
+                    # Format the registered name in title case for readability
+                    display_name = registered.get(subset_of, subset_of)
+                    results[name] = f'Probably taken (subset of "{subset_of.title()}")'
+                elif similar_count > 0:
+                    results[name] = f"Available (but {similar_count} similar names exist)"
                 else:
                     results[name] = "Available"
     except Exception as e:
@@ -162,13 +200,15 @@ for name, status in results.items():
 **Important notes:**
 - The CSV URL changes monthly. The script dynamically computes the current month suffix and tries the current month, previous month, and the month before that, so it stays up to date automatically.
 - The CSV is large (~100MB+). Cache it at `/tmp/asic_business_names.csv` so it's only downloaded once per session.
-- Search is case-insensitive exact match first, then flag close matches.
+- The CSV is **tab-delimited** with a **UTF-8 BOM** character — use `encoding='utf-8-sig'` and `delimiter='\t'`.
+- Search is case-insensitive exact match first, then word-based similarity matching.
+- **Subset matching:** If all significant words (3+ chars, excluding stop words) from the searched name appear in a registered name, it's flagged as "Probably taken". This avoids false positives from short words like "A" or "DOR".
 
 ### Check 2: Domain Name Availability
 
 **Approach:** Use the `python-whois` library for a zero-config WHOIS lookup. No API key required.
 
-**Network allowlist required:** WHOIS servers vary by TLD but typically use port 43. If WHOIS is blocked, fall back to DNS resolution as a rough check.
+**Requires network access to:** WHOIS servers (port 43). Falls back to DNS resolution if WHOIS is unavailable.
 
 **Python script pattern:**
 
@@ -191,21 +231,23 @@ def check_domains(base_name, tlds):
                 results[domain] = "Taken"
             else:
                 results[domain] = "Available"
-        except whois.parser.PywhoisError:
-            results[domain] = "Available"
         except socket.timeout:
             results[domain] = "Error: Timeout"
         except ConnectionRefusedError:
-            results[domain] = "Error: WHOIS blocked. Try adding whois servers to allowlist."
+            results[domain] = "Error: WHOIS connection refused."
         except Exception as e:
-            # Fallback: try DNS resolution
-            try:
-                socket.getaddrinfo(domain, 80)
-                results[domain] = "Likely taken (DNS resolves)"
-            except socket.gaierror:
-                results[domain] = "Likely available (no DNS)"
-            except Exception:
-                results[domain] = f"Error: {e}"
+            err_lower = str(e).lower()
+            if any(p in err_lower for p in ['not found', 'no match', 'no entries', 'not registered', 'no data found']):
+                results[domain] = "Available"
+            else:
+                # Fallback: try DNS resolution
+                try:
+                    socket.getaddrinfo(domain, 80)
+                    results[domain] = "Likely taken (DNS resolves)"
+                except socket.gaierror:
+                    results[domain] = "Likely available (no DNS)"
+                except Exception:
+                    results[domain] = f"Error: {e}"
 
     return results
 
@@ -217,11 +259,9 @@ for domain, status in results.items():
 
 ### Check 3: Etsy Shop Name Availability
 
-**Approach:** HTTP GET to the public Etsy shop URL. A 404 response indicates the shop name is not taken. Etsy uses aggressive bot detection (DataDome), so this check is best-effort.
+**Approach:** Use Claude's WebSearch tool to search Google for Etsy shop pages. Etsy's DataDome bot detection blocks all direct HTTP requests with a 403, making Python scripts unreliable. A Google search for `Etsy shop "[shopname]"` works reliably.
 
-**Network allowlist required:** `www.etsy.com`
-
-**Python script pattern:**
+**No network script needed.** This check uses Claude's built-in WebSearch tool, not a Python script.
 
 1. Convert the business name to a shop handle: lowercase, remove spaces and punctuation, replace `&` with `and`, keep only alphanumeric characters
 2. Use the WebSearch tool to search: `Etsy shop "[shophandle]"`
@@ -236,48 +276,21 @@ for domain, status in results.items():
 import requests
 import time
 
-def check_etsy_names(names):
-    """Check Etsy shop name availability via public URL."""
-    results = {}
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-    }
+1. Convert the business name to a shop handle: lowercase, remove spaces and punctuation, replace `&` with `and`, keep only alphanumeric characters
+2. Use the WebSearch tool to search: `Etsy shop "[shophandle]"`
+3. Analyse the results:
+   - If an exact Etsy shop URL appears (e.g., `etsy.com/shop/trovejewellery` or `etsy.com/au/shop/trovejewellery`) — **Taken**
+   - If no Etsy shop URL matches the handle — **Likely available**
 
-    for name in names:
-        shop_name = name.lower().replace(' ', '').replace("'", '').replace('&', 'and')
-        shop_name = ''.join(c for c in shop_name if c.isalnum())
-        url = f"https://www.etsy.com/shop/{shop_name}"
+**Run all name searches in parallel** (one WebSearch call per name) for speed. No rate limiting needed since these are Google searches, not direct Etsy requests.
 
-        try:
-            resp = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
-            if resp.status_code == 404:
-                results[name] = "Likely available"
-            elif resp.status_code == 200:
-                results[name] = f"Taken ({url})"
-            elif resp.status_code == 403:
-                results[name] = "Error: Blocked by Etsy bot detection"
-            else:
-                results[name] = f"Uncertain (HTTP {resp.status_code})"
-        except requests.exceptions.ConnectionError:
-            results[name] = "Error: Network blocked. Add www.etsy.com to Cowork allowlist."
-        except Exception as e:
-            results[name] = f"Error: {e}"
-
-        time.sleep(1)  # Rate limit: 1 request per second
-
-    return results
-
-# Usage:
-results = check_etsy_names(["Example Business", "Another Name"])
-for name, status in results.items():
-    print(f"  {name}: {status}")
-```
+**Example search:** For "Trove Jewellery", search `Etsy shop "trovejewellery"` and look for `etsy.com/shop/trovejewellery` in the results.
 
 ### Check 4: Instagram Handle Availability
 
 **Approach:** HTTP GET to the public Instagram profile URL. Instagram aggressively blocks automated requests — the `requests` library's TLS fingerprint is often detected and blocked. This check is best-effort and may return "Uncertain" frequently.
 
-**Network allowlist required:** `www.instagram.com`
+**Requires network access to:** `www.instagram.com`
 
 **Python script pattern:**
 
@@ -317,7 +330,7 @@ def check_instagram_handles(names):
             else:
                 results[name] = f"Uncertain (HTTP {resp.status_code}, @{handle})"
         except requests.exceptions.ConnectionError:
-            results[name] = "Error: Network blocked. Add www.instagram.com to Cowork allowlist."
+            results[name] = "Error: Network blocked. Cannot reach www.instagram.com. Check internet connection."
             break
         except Exception as e:
             results[name] = f"Error: {e}"
