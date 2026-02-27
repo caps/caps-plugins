@@ -56,11 +56,6 @@ Before running any check scripts, create a virtual environment and install depen
 python3 -m venv /tmp/namechecker-venv 2>/dev/null; /tmp/namechecker-venv/bin/pip install requests beautifulsoup4 python-whois 2>&1 | tail -1
 ```
 
-<<<<<<< Updated upstream
-If any check fails with a network/connection error, tell the user:
-
-> "It looks like network access to [domain] is blocked. In Cowork, go to **Settings > Capabilities > Additional allowed domains** and add `[domain]`. Then try again."
-=======
 Then verify the installation:
 ```bash
 /tmp/namechecker-venv/bin/python3 -c "import requests, whois; print('OK')"
@@ -70,8 +65,7 @@ All Python scripts below must be run with `/tmp/namechecker-venv/bin/python3` in
 
 **Do NOT launch parallel checks until dep installation has completed and been verified. The dep install must be its own sequential step before any parallel work.**
 
-If any check fails with a network/connection error, tell the user clearly which service failed and suggest they check their internet connection or try again later.
->>>>>>> Stashed changes
+If any check fails with a network/connection error, tell the user clearly which service failed and suggest they check their internet connection or try again later. In Cowork, they may also need to go to **Settings > Capabilities > Additional allowed domains** and add the relevant domain.
 
 ### Check 1: ASIC Business Names Register
 
@@ -229,18 +223,18 @@ for domain, status in results.items():
 
 **Python script pattern:**
 
-<<<<<<< Updated upstream
-```python
-import requests
-import time
-=======
 1. Convert the business name to a shop handle: lowercase, remove spaces and punctuation, replace `&` with `and`, keep only alphanumeric characters
 2. Use the WebSearch tool to search: `Etsy shop "[shophandle]"`
 3. Analyse the results:
    - If an exact Etsy shop URL appears (e.g., `etsy.com/shop/trovejewellery` or `etsy.com/au/shop/trovejewellery`) — **Taken**
    - If no exact match but a very similar shop name appears (e.g., searching "gildedthread" finds "Gildedthreadsshop") — **Likely available (but similar shop "[name]" exists)**
    - If no Etsy shop URL matches or is similar — **Likely available**
->>>>>>> Stashed changes
+
+**Fallback Python script (if WebSearch is unavailable):**
+
+```python
+import requests
+import time
 
 def check_etsy_names(names):
     """Check Etsy shop name availability via public URL."""
@@ -356,11 +350,8 @@ Always present results as a markdown table. Sort names by availability score (mo
 ### Status Labels
 - **Available** — confirmed not registered/taken
 - **Likely available** — best-effort check suggests not taken, but verify manually
-<<<<<<< Updated upstream
-=======
 - **Likely available (but similar shop "[name]" exists)** — Etsy handle not taken, but a similar shop name was found in search results
 - **Probably taken** — the name is a word-subset of an existing registered name (e.g., "Trove Jewellery" vs "Trove Jewellery Studio"). ASIC will likely reject this.
->>>>>>> Stashed changes
 - **Taken** — confirmed registered or in use
 - **Found (Cancelled)** — was registered with ASIC but cancelled (may be reusable)
 - **Error: [reason]** — check failed, explain why and how to fix

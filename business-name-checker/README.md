@@ -37,12 +37,10 @@ claude plugins add business-name-checker@caps-plugins
 
 The plugin runs Python scripts to check external services. For these to work in Cowork, you need to allow network access to the relevant domains.
 
-<<<<<<< Updated upstream
-**Go to Settings > Capabilities > Additional allowed domains** and add whichever domains you need:
-=======
 - **Python 3** installed and available on your PATH
 - A virtual environment is auto-created at `/tmp/namechecker-venv` on first run — no manual setup needed
->>>>>>> Stashed changes
+
+**Go to Settings > Capabilities > Additional allowed domains** and add whichever domains you need:
 
 | Check | Domain to Allow |
 |---|---|
