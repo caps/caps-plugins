@@ -1,0 +1,8 @@
+{
+  "name": "business-name-checker",
+  "version": "1.0.0",
+  "description": "Generate Australian business name ideas and check availability across ASIC, domains, Etsy, and Instagram. Each check is optional — you choose what to search.",
+  "author": {
+    "name": "Pete Capra"
+  }
+}
