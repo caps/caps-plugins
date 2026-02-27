@@ -102,12 +102,14 @@ pip install requests beautifulsoup4 python-whois 2>/dev/null || pip3 install req
 
 **Step 2: Run each selected check**
 
-For each check the user selected, write a Python script following the exact pattern in the skill file, then execute it. Run checks in this order:
+For each check the user selected, follow the approach defined in the skill file. Run checks in this order:
 
-1. **ASIC** (slowest — downloads ~100MB CSV on first run, fast after caching)
-2. **Domains** (moderate — WHOIS lookups take 1-2 seconds each)
-3. **Etsy** (moderate — HTTP requests with 1-second delays)
-4. **Instagram** (slowest per-request — 2-second delays, most likely to be blocked)
+1. **ASIC** (slowest — downloads ~100MB CSV on first run, fast after caching) — Python script
+2. **Domains** (moderate — WHOIS lookups take 1-2 seconds each) — Python script
+3. **Etsy** (fast — parallel Google searches via WebSearch tool, no HTTP delays)
+4. **Instagram** (slowest per-request — 2-second delays, most likely to be blocked) — Python script
+
+Note: Etsy uses Google search via the WebSearch tool (not a Python script). Run one WebSearch per name, all in parallel.
 
 **Progress updates:** After each check completes, tell the user what's done:
 - "ASIC check complete — 7 of 10 names are available on the register."

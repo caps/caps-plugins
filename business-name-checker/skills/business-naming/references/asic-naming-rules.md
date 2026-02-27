@@ -36,8 +36,8 @@ See the SKILL.md for the full list. Key restrictions:
 
 - URL: https://data.gov.au/data/dataset/asic-business-names
 - Updated weekly (every Wednesday)
-- Format: CSV
-- Fields: BN_NAME, BN_STATUS, BN_REG_DT, BN_CANCEL_DT, BN_RENEW_DT, BN_STATE_NUM, BN_STATE_OF_REG, BN_ABN
+- Format: **Tab-delimited CSV with a UTF-8 BOM** — use `encoding='utf-8-sig'` and `delimiter='\t'` when reading
+- Fields: BN_NAME, BN_STATUS, BN_REG_DT, BN_CANCEL_DT, BN_RENEW_DT, BN_STATE_NUM, BN_STATE_OF_REG, BN_ABN, REGISTER_NAME
 - BN_STATUS values: "Registered", "Cancelled", "Deregistered"
 - File size: ~100-150MB
 - The download URL includes a date suffix that changes monthly
@@ -48,5 +48,6 @@ See the SKILL.md for the full list. Key restrictions:
 2. Search for exact match (case-insensitive) on BN_NAME
 3. If exact match found and status is "Registered" — name is taken
 4. If exact match found but status is "Cancelled" or "Deregistered" — name may be available for re-registration
-5. If no exact match — name is likely available (but still check ASIC identical name rules above)
-6. Also flag close matches where the candidate name is a substring of a registered name or vice versa
+5. If no exact match, check for **subset matches**: extract meaningful words (3+ characters, excluding stop words like "the", "and", "pty", "ltd") from the candidate name. If ALL of those words appear in a registered name, flag as "Probably taken" — ASIC will likely reject this as too similar (e.g., "Trove Jewellery" is a subset of "Trove Jewellery Studio")
+6. Also flag similar names where significant word overlap exists (2+ shared meaningful words)
+7. Only check similarity against names with "Registered" status — skip Cancelled/Deregistered
