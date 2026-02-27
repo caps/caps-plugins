@@ -38,7 +38,9 @@ claude plugins add business-name-checker@caps-plugins
 The plugin executes Python scripts to check external services. You'll need:
 
 - **Python 3** installed and available on your PATH
-- The plugin will auto-install required pip packages (`requests`, `beautifulsoup4`, `python-whois`) on first run
+- A virtual environment is auto-created at `/tmp/namechecker-venv` on first run — no manual setup needed
+
+**Go to Settings > Capabilities > Additional allowed domains** and add whichever domains you need:
 
 No API keys or special configuration required — all checks use free, public data sources.
 
