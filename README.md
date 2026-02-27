@@ -19,6 +19,7 @@ claude plugins add board-paper-writer@caps-plugins
 | Plugin | Description |
 |---|---|
 | [board-paper-writer](board-paper-writer/) | Draft governance-grade board papers through collaborative Q&A and iterative refinement. Covers decision, discussion, noting, and assurance papers — structured around AICD, GGI, and Board Intelligence QDI best practices. |
+| [business-name-checker](business-name-checker/) | Generate Australian business name ideas and check availability across ASIC, domains, Etsy, and Instagram. Each check is optional — you choose what to search. |
 
 ## What Are Claude Plugins?
 
